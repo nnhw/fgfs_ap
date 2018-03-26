@@ -1,25 +1,21 @@
 import socket
-import struct
+import time
 
-sock = socket.socket()
-sock.bind(('', 9091))
-sock.listen(1)
-conn, addr = sock.accept()
+sock_fgfs = socket.socket()
+sock_fgfs.bind(('', 9091))
+sock_fgfs.listen(1)
+conn_fgfs, addr_fgfs = sock_fgfs.accept()
 
-print('fgfs connected:', addr)
+print('fgfs connected:', addr_fgfs)
 
-sock_inter = socket.socket()
-sock_inter.bind(('', 9092))
-sock_inter.listen(1)
-conn_inter, addr_inter = sock_inter.accept()
+sock_ap = socket.socket()
+sock_ap.bind(('', 9092))
+sock_ap.listen(1)
+conn_ap, addr_ap = sock_ap.accept()
 
-print('inter connected:', addr_inter)
+print('ap connected:', addr_ap)
 
 while True:
-    data = conn.recv(24)
-    #udata = data.struct.unpack();
-    
- #   print(data)
- #   print(udata)
-    conn_inter.send(data)
-conn.close()
+    time.sleep(1)
+    data = conn_fgfs.recv(24)
+    conn_ap.send(data)

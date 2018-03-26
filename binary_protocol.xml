@@ -1,0 +1,69 @@
+<?xml version="1.0"?>
+
+<PropertyList>
+
+ <generic>
+   
+  <input>
+   <binary_mode>true</binary_mode>
+   <binary_footer>magic,0x12345678</binary_footer>
+
+   <chunk>
+    <name>elevator</name>
+    <type>int</type>
+    <node>/controls/flight/elevator</node>
+   </chunk> 
+   
+   <chunk>
+    <name>aileron</name>
+    <type>int</type>
+    <node>/controls/flight/aileron</node>
+   </chunk>
+
+   <chunk>
+    <name>rudder</name>
+    <type>int</type>
+    <node>/controls/flight/rudder</node>
+   </chunk>  
+
+  </input>     
+     
+  <output>
+   <binary_mode>true</binary_mode>
+   <binary_footer>magic,0x12345678</binary_footer>
+
+   <chunk>
+    <name>Pitch (deg)</name>
+    <type>int</type>
+    <node>/orientation/pitch-deg</node>
+   </chunk>
+
+   <chunk>
+    <name>Roll (deg)</name>
+    <type>int</type>
+    <node>/orientation/roll-deg</node>
+   </chunk>   
+   
+   <chunk>
+    <name>Yaw (deg)</name>
+    <type>int</type>
+    <node>/orientation/heading-deg</node>
+   </chunk>
+
+   <chunk>
+    <name>indicated speed (kt)</name>
+    <type>int</type>
+    <node>/velocities/airspeed-kt</node>
+   </chunk>
+
+   <chunk>
+    <name>altitude (ft)</name>
+    <type>int</type>
+    <node>/position/altitude-ft</node>
+   </chunk>   
+   
+  </output>
+
+ </generic>
+
+</PropertyList>
