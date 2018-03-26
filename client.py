@@ -6,7 +6,7 @@ sock = socket.socket()
 sock.connect(('localhost', 9090))
 
 sock_inter = socket.socket()
-sock_inter.connect(('localhost', 9092))
+sock_inter.connect(('localhost', 9093))
 
 #data_send = struct.pack('!iiii',0,0,0,305419896)
 
