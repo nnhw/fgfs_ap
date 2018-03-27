@@ -10,19 +10,19 @@
 
    <chunk>
     <name>elevator</name>
-    <type>int</type>
+    <type>float</type>
     <node>/controls/flight/elevator</node>
    </chunk> 
    
    <chunk>
     <name>aileron</name>
-    <type>int</type>
+    <type>float</type>
     <node>/controls/flight/aileron</node>
    </chunk>
 
    <chunk>
     <name>rudder</name>
-    <type>int</type>
+    <type>float</type>
     <node>/controls/flight/rudder</node>
    </chunk>  
 
@@ -49,6 +49,24 @@
     <type>int</type>
     <node>/orientation/heading-deg</node>
    </chunk>
+
+   <chunk>
+    <name>elevator</name>
+    <type>float</type>
+    <node>/controls/flight/elevator</node>
+   </chunk> 
+   
+   <chunk>
+    <name>aileron</name>
+    <type>float</type>
+    <node>/controls/flight/aileron</node>
+   </chunk>
+
+   <chunk>
+    <name>rudder</name>
+    <type>float</type>
+    <node>/controls/flight/rudder</node>
+   </chunk>  
 
    <chunk>
     <name>indicated speed (kt)</name>

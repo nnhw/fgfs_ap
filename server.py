@@ -17,5 +17,5 @@ print('ap connected:', addr_ap)
 
 while True:
     time.sleep(1)
-    data = conn_fgfs.recv(24)
+    data = conn_fgfs.recv(36)
     conn_ap.send(data)
