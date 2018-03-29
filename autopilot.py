@@ -37,7 +37,7 @@ def calculate_pid(_value,_setpoint):
 
     return pid_value
 
-def parse(data):
+def parse_incoming(data):
     udata = struct.unpack('!iiifffiii',data)
     _pitch = udata[0]
     _roll = udata[1]
@@ -47,24 +47,23 @@ def parse(data):
     _rudder = udata[5]
     _speed = udata[6]
     _altitude = udata[7]
+    print('pitch=',_pitch)
+    print('roll=',_roll)
+    print('yaw=',_yaw)
     print('elevator=', _elevator)    
     print('aileron=', _aileron)    
     print('rudder=', _rudder)    
     return _pitch,_roll,_yaw
 
-def calculate_output(data):
-    pitch, roll, yaw = parse(data)
+def pack_outgoing(_elevator,_aileron,_rudder):
+    return struct.pack('!fffi',_elevator,_aileron,_rudder,305419896)
 
-    print('pitch=',pitch)
-    print('roll=',roll)
-    print('yaw=',yaw)
-    
+def calculate_output(data):
+    pitch, roll, yaw = parse_incoming(data)
     elevator = -calculate_pid(pitch,0) 
     aileron = calculate_pid(roll,0)
     rudder = 0 #-0.01*roll
-
-    data_send = struct.pack('!fffi',elevator,aileron,rudder,305419896)
-    return data_send
+    return pack_outgoing(elevator, aileron, rudder)
 
 def reconnect_to_fgfs(_socket):
     print('reconnecting...')
@@ -100,7 +99,5 @@ sock_out = connect_to_fgfs()
 while True:
     time.sleep(1)
     data_rcv = conn_in.recv(36)
-
     data_send = calculate_output(data_rcv)
-
     sock_out.send(data_send)
