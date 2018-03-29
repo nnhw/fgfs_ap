@@ -1,5 +1,4 @@
 To start a simulation session:
-1) python server.py
+0) sudo cp binary_protocol.xml /usr/share/games/flightgear/Protocol/
+1) python autopilot.py
 2) fgfs --httpd=5500 --generic=socket,in,1,,9090,tcp,binary_protocol --generic=socket,out,1,,9091,tcp,binary_protocol
-3) python autopilot.py
-4) python client.py

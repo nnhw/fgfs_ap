@@ -36,7 +36,6 @@ def calculate_pid(_value,_setpoint):
     pid_prev = pid_value
 
     return pid_value
-    
 
 def parse(data):
     udata = struct.unpack('!iiifffiii',data)
@@ -67,19 +66,41 @@ def calculate_output(data):
     data_send = struct.pack('!fffi',elevator,aileron,rudder,305419896)
     return data_send
 
+def reconnect_to_fgfs(_socket):
+    print('reconnecting...')
+    try:
+        _socket.connect(('localhost', 9090))
+    except Exception:
+        time.sleep(1);
+        reconnect_to_fgfs(_socket);
 
-sock_client = socket.socket()
-sock_client.bind(('', 9093))
-sock_client.listen(1)
-conn_client, addr_client = sock_client.accept()
+def connect_to_fgfs():
+    print('connecting...')
+    _sock_out = socket.socket()
+    try:
+        sock_out.connect(('localhost', 9090))
+    except Exception:
+        time.sleep(1);
+        reconnect_to_fgfs(_sock_out);
+    print('outgoing connection established')
+    return _sock_out
+        
+def wait_for_incoming_connection_from_fgfs():
+    print('waiting for connecting...')
+    _sock_in = socket.socket()
+    _sock_in.bind(('', 9091))
+    _sock_in.listen(1)
+    _conn_in, _addr_in = _sock_in.accept()
+    print('incoming connection established:', _addr_in)
+    return _conn_in, _addr_in
 
-sock_server = socket.socket()
-sock_server.connect(('localhost', 9092))
+conn_in, addr_in = wait_for_incoming_connection_from_fgfs()
+sock_out = connect_to_fgfs()
 
 while True:
     time.sleep(1)
-    data_rcv = sock_server.recv(36)
+    data_rcv = conn_in.recv(36)
 
     data_send = calculate_output(data_rcv)
 
-    conn_client.send(data_send)
+    sock_out.send(data_send)
