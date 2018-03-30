@@ -1,10 +1,31 @@
 import socket
 import time
 import struct
+import cmd
+from threading import Thread
 
 # error_prev = 0
 # I_prev = 0
 # pid_prev = 0
+
+    #Класс-оболочка для командного интерфейса
+class ConvertShell(cmd.Cmd):
+    intro = 'Welcome to the Converter shell.   Type help or ? to list commands.\n'
+    prompt = '(command) '
+
+    def do_say_hi(self, arg):
+        'Test_func'
+        print('hi!')
+
+    def do_start(self, arg):
+        'Start!'
+        start_data_flow()
+        
+
+    def do_bye(self,arg):
+        'Exit'
+        print('Good Bye')
+        return True
 
 def calculate_pid(_value,_setpoint):
     proportional_coefficient = 0.01
@@ -91,13 +112,26 @@ def wait_for_incoming_connection_from_fgfs():
     _sock_in.listen(1)
     _conn_in, _addr_in = _sock_in.accept()
     print('incoming connection established:', _addr_in)
-    return _conn_in, _addr_in
+    return _conn_in
 
-conn_in, addr_in = wait_for_incoming_connection_from_fgfs()
-sock_out = connect_to_fgfs()
+def data_flow_handler(_conn_in,_sock_out):
+    while True:
+        time.sleep(1)
+        data_rcv = _conn_in.recv(36)
+        data_send = calculate_output(data_rcv)
+        _sock_out.send(data_send)
 
-while True:
-    time.sleep(1)
-    data_rcv = conn_in.recv(36)
-    data_send = calculate_output(data_rcv)
-    sock_out.send(data_send)
+def start_data_flow():
+    conn_in = wait_for_incoming_connection_from_fgfs()
+    sock_out = connect_to_fgfs()
+    data_flow_thread = Thread(target = data_flow_handler,args = (conn_in,sock_out))
+    data_flow_thread.start()
+
+if __name__ == "__main__":
+    ConvertShell().cmdloop()
+
+
+
+
+
+
