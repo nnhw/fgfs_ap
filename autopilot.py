@@ -20,7 +20,6 @@ class ConvertShell(cmd.Cmd):
     def do_start(self, arg):
         'Start!'
         start_data_flow()
-        
 
     def do_bye(self,arg):
         'Exit'
@@ -68,12 +67,12 @@ def parse_incoming(data):
     _rudder = udata[5]
     _speed = udata[6]
     _altitude = udata[7]
-    print('pitch=',_pitch)
-    print('roll=',_roll)
-    print('yaw=',_yaw)
-    print('elevator=', _elevator)    
-    print('aileron=', _aileron)    
-    print('rudder=', _rudder)    
+    # print('pitch=',_pitch)
+    # print('roll=',_roll)
+    # print('yaw=',_yaw)
+    # print('elevator=', _elevator)    
+    # print('aileron=', _aileron)    
+    # print('rudder=', _rudder)    
     return _pitch,_roll,_yaw
 
 def pack_outgoing(_elevator,_aileron,_rudder):
@@ -98,7 +97,7 @@ def connect_to_fgfs():
     print('connecting...')
     _sock_out = socket.socket()
     try:
-        sock_out.connect(('localhost', 9090))
+        _sock_out.connect(('localhost', 9090))
     except Exception:
         time.sleep(1);
         reconnect_to_fgfs(_sock_out);
