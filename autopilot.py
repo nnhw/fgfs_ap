@@ -8,14 +8,32 @@ from threading import Thread
 # I_prev = 0
 # pid_prev = 0
 
+pitch_setpoint = 0
+roll_setpoint = 0
+yaw_setpoint = 0
+
     #Класс-оболочка для командного интерфейса
 class ConvertShell(cmd.Cmd):
     intro = 'Welcome to the Converter shell.   Type help or ? to list commands.\n'
     prompt = '(command) '
 
-    def do_say_hi(self, arg):
-        'Test_func'
-        print('hi!')
+    def do_set_pitch(self, arg):
+        'Set pitch'
+        global pitch_setpoint
+        pitch_setpoint = parse(arg)
+        # print('hi!')
+
+    def do_set_roll(self, arg):
+        'Set roll'
+        global roll_setpoint
+        roll_setpoint = parse(arg)
+        # print('hi!')
+
+    def do_set_yaw(self, arg):
+        'Set yaw'
+        global yaw_setpoint
+        yaw_setpoint = parse(arg)        
+        # print('hi!')
 
     def do_start(self, arg):
         'Start!'
@@ -25,6 +43,12 @@ class ConvertShell(cmd.Cmd):
         'Exit'
         print('Good Bye')
         return True
+
+def parse(arg):
+    'Convert a series of zero or more numbers to an argument tuple'
+    # return tuple(map(int, arg.split()))
+    return int(arg)
+
 
 def calculate_pid(_value,_setpoint):
     proportional_coefficient = 0.01
@@ -79,9 +103,11 @@ def pack_outgoing(_elevator,_aileron,_rudder):
     return struct.pack('!fffi',_elevator,_aileron,_rudder,305419896)
 
 def calculate_output(data):
+    global pitch_setpoint
+    global roll_setpoint
     pitch, roll, yaw = parse_incoming(data)
-    elevator = -calculate_pid(pitch,0) 
-    aileron = calculate_pid(roll,0)
+    elevator = -calculate_pid(pitch,pitch_setpoint) 
+    aileron = calculate_pid(roll,roll_setpoint)
     rudder = 0 #-0.01*roll
     return pack_outgoing(elevator, aileron, rudder)
 
@@ -124,6 +150,7 @@ def start_data_flow():
     conn_in = wait_for_incoming_connection_from_fgfs()
     sock_out = connect_to_fgfs()
     data_flow_thread = Thread(target = data_flow_handler,args = (conn_in,sock_out))
+    data_flow_thread.daemon = True
     data_flow_thread.start()
 
 if __name__ == "__main__":
