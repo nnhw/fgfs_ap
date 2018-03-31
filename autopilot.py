@@ -4,9 +4,11 @@ import struct
 import cmd
 from threading import Thread
 
-# error_prev = 0
-# I_prev = 0
-# pid_prev = 0
+error_prev = 0
+I_prev_p = 0
+I_prev_r = 0
+I_prev_y = 0
+pid_prev = 0
 
 pitch_setpoint = 0
 roll_setpoint = 0
@@ -20,18 +22,24 @@ class ConvertShell(cmd.Cmd):
     def do_set_pitch(self, arg):
         'Set pitch'
         global pitch_setpoint
+        global I_prev_p
+        I_prev_p = 0
         pitch_setpoint = parse(arg)
         # print('hi!')
 
     def do_set_roll(self, arg):
         'Set roll'
         global roll_setpoint
+        global I_prev_r
+        I_prev_r = 0
         roll_setpoint = parse(arg)
         # print('hi!')
 
     def do_set_yaw(self, arg):
         'Set yaw'
         global yaw_setpoint
+        global I_prev_y
+        I_prev_y = 0
         yaw_setpoint = parse(arg)        
         # print('hi!')
 
@@ -50,10 +58,24 @@ def parse(arg):
     return int(arg)
 
 
-def calculate_pid(_value,_setpoint):
-    proportional_coefficient = 0.01
-    integral_coefficient = 0
-    differential_coefficient = 0
+def calculate_pid(_value,_setpoint,_mode):
+    global error_prev
+    global pid_prev
+    global I_prev_p
+    global I_prev_r
+    global I_prev_y
+
+    if _mode == "pitch":
+        I_prev = I_prev_p
+    elif _mode == "roll":
+        I_prev = I_prev_r
+    elif _mode == "yaw":
+        I_prev = I_prev_y
+
+
+    proportional_coefficient = 0.0055 
+    integral_coefficient = 0.001
+    differential_coefficient = 0.001
  
     pid_value = 0 
     error = 0
@@ -64,18 +86,20 @@ def calculate_pid(_value,_setpoint):
     error = _setpoint - _value
 
     P = proportional_coefficient * error
-    # I = I_prev + integral_coefficient * error
-    # if I>500:
-    #     I = 500
-    # D = differential_coefficient * (error - pid_prev)
+    I = I_prev + integral_coefficient * error
+    if I > 1:
+        I = 1
+    D = differential_coefficient * (error - error_prev)
 
     pid_value = P+I+D
     error_prev = error
-    I_prev = I
-    # pid_value += 1500
 
-    # if(angle_value>2000) angle_value = 2000;
-    # if(angle_value<1000) angle_value = 1000;
+    if _mode == "pitch":
+        I_prev_p = I
+    elif _mode == "roll":
+        I_prev_r = I
+    elif _mode == "yaw":
+        I_prev_y = I
 
     pid_prev = pid_value
 
@@ -106,9 +130,9 @@ def calculate_output(data):
     global pitch_setpoint
     global roll_setpoint
     pitch, roll, yaw = parse_incoming(data)
-    elevator = -calculate_pid(pitch,pitch_setpoint) 
-    aileron = calculate_pid(roll,roll_setpoint)
-    rudder = 0 #-0.01*roll
+    elevator = -calculate_pid(pitch,pitch_setpoint,"pitch") 
+    aileron = calculate_pid(roll,roll_setpoint,"roll")
+    rudder = calculate_pid(yaw, yaw_setpoint,"yaw")
     return pack_outgoing(elevator, aileron, rudder)
 
 def reconnect_to_fgfs(_socket):
