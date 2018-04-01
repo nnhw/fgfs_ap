@@ -14,6 +14,9 @@ pitch_setpoint = 0
 roll_setpoint = 0
 yaw_setpoint = 0
 
+data_rcv = 0
+data_send = 0
+
     #Класс-оболочка для командного интерфейса
 class ConvertShell(cmd.Cmd):
     intro = 'Welcome to the Converter shell.   Type help or ? to list commands.\n'
@@ -164,10 +167,11 @@ def wait_for_incoming_connection_from_fgfs():
     return _conn_in
 
 def data_flow_handler(_conn_in,_sock_out):
+    global data_rcv
+    global data_send
     while True:
-        time.sleep(1)
+        time.sleep(0.1)
         data_rcv = _conn_in.recv(36)
-        data_send = calculate_output(data_rcv)
         _sock_out.send(data_send)
 
 def start_data_flow():
@@ -176,6 +180,17 @@ def start_data_flow():
     data_flow_thread = Thread(target = data_flow_handler,args = (conn_in,sock_out))
     data_flow_thread.daemon = True
     data_flow_thread.start()
+
+def data_calculation_handler():
+    global data_rcv
+    global data_send
+    while True:
+        data_send = calculate_output(data_rcv)
+
+def start_data_calculation():
+    data_calculation_thread = Thread(target = data_calculation_handler)
+    data_calculation_thread.daemon = True
+    data_calculation_thread.start()
 
 if __name__ == "__main__":
     ConvertShell().cmdloop()
