@@ -20,66 +20,6 @@ yaw_block = 0
 data_rcv = b''
 data_send = b''
 
-def initialization():
-    pass
-
-    #Класс-оболочка для командного интерфейса
-class ConvertShell(cmd.Cmd):
-    intro = 'Welcome to the Converter shell.   Type help or ? to list commands.\n'
-    prompt = '(command) '
-
-    def do_set_pitch(self, arg):
-        'Set pitch'
-        global pitch_setpoint
-        global I_prev_p
-        I_prev_p = 0
-        pitch_setpoint = parse(arg)
-
-    def do_set_roll(self, arg):
-        'Set roll'
-        global roll_setpoint
-        global I_prev_r
-        I_prev_r = 0
-        roll_setpoint = parse(arg)
-
-    def do_set_yaw(self, arg):
-        'Set yaw'
-        global yaw_setpoint
-        global I_prev_y
-        global yaw_block
-        yaw_block = False
-        I_prev_y = 0
-        yaw_setpoint = parse(arg)        
-
-    def do_stop_yaw_stab(self, arg):
-        'Stop yaw calc'
-        global yaw_block
-        yaw_block = True
-
-    def do_takeoff(self, arg):
-        'take-off'
-
-    def do_start_flow(self, arg):
-        'Start data flow'
-        start_data_flow()
-
-    def do_start_calc(self, arg):
-        'Start data calculation'
-        start_data_calculation()
- 
-    def do_start_log(self, arg):
-        'Start data logging'
-        start_data_logging()
-
-    def do_bye(self,arg):
-        'Exit'
-        print('Good Bye')
-        return True
-
-def parse(arg):
-    'Convert a series of zero or more numbers to an argument tuple'
-    # return tuple(map(int, arg.split()))
-    return int(arg)
 
 def calculate_pid(_value,_setpoint,_mode):
     global error_prev
@@ -131,26 +71,7 @@ def calculate_pid(_value,_setpoint,_mode):
     else:
         return pid_value
 
-def parse_incoming(data):
-    udata = struct.unpack('!iiifffiii',data)
-    _pitch = udata[0]
-    _roll = udata[1]
-    _yaw = udata[2]
-    _elevator = udata[3]
-    _aileron = udata[4]
-    _rudder = udata[5]
-    _speed = udata[6]
-    _altitude = udata[7]
-    # print('pitch=',_pitch)
-    # print('roll=',_roll)
-    # print('yaw=',_yaw)
-    # print('elevator=', _elevator)    
-    # print('aileron=', _aileron)    
-    # print('rudder=', _rudder)    
-    return _pitch,_roll,_yaw,_elevator,_aileron,_rudder,_speed,_altitude
 
-def pack_outgoing(_elevator,_aileron,_rudder):
-    return struct.pack('!fffi',_elevator,_aileron,_rudder,305419896)
 
 def calculate_output(data):
     global pitch_setpoint
@@ -167,13 +88,7 @@ def calculate_output(data):
         roll_setpoint = rudder * 10
     return pack_outgoing(elevator, aileron, rudder)
 
-def data_flow_handler(_sock_in,_sock_out):
-    global data_rcv
-    global data_send
-    while True:
-        time.sleep(0.1)
-        data_rcv = _sock_in.recvfrom(36)[0]
-        _sock_out.sendto(data_send,("", 9090))
+
 
 def data_calculation_handler():
     global data_rcv
@@ -191,14 +106,7 @@ def data_logging_handler(_file):
         _file.flush
         time.sleep(1)
 
-def start_data_flow():
-    sock_in = socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
-    sock_out = socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
-    sock_in.bind(('', 9091))
 
-    data_flow_thread = Thread(target = data_flow_handler,args = (sock_in,sock_out))
-    data_flow_thread.daemon = True
-    data_flow_thread.start()
 
 def start_data_calculation():
     data_calculation_thread = Thread(target = data_calculation_handler)
@@ -211,10 +119,6 @@ def start_data_logging():
     data_logging_thread.daemon = True
     data_logging_thread.start()
 
-if __name__ == "__main__":
-    initialization()
-    q = queue.Queue()
-    ConvertShell().cmdloop()
 
 
 
