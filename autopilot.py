@@ -1,6 +1,5 @@
 import socket
 import time
-import datetime
 import struct
 import cmd
 from threading import Thread
@@ -14,6 +13,8 @@ pid_prev = 0
 pitch_setpoint = 0
 roll_setpoint = 0
 yaw_setpoint = 0
+
+yaw_block = 0
 
 data_rcv = b''
 data_send = b''
@@ -29,7 +30,6 @@ class ConvertShell(cmd.Cmd):
         global I_prev_p
         I_prev_p = 0
         pitch_setpoint = parse(arg)
-        # print('hi!')
 
     def do_set_roll(self, arg):
         'Set roll'
@@ -37,28 +37,35 @@ class ConvertShell(cmd.Cmd):
         global I_prev_r
         I_prev_r = 0
         roll_setpoint = parse(arg)
-        # print('hi!')
 
     def do_set_yaw(self, arg):
         'Set yaw'
         global yaw_setpoint
         global I_prev_y
+        global yaw_block
+        yaw_block = False
         I_prev_y = 0
         yaw_setpoint = parse(arg)        
-        # print('hi!')
 
-    def do_start(self, arg):
-        'Start!'
-        start_data_flow()
+    def do_stop_yaw_stab(self, arg):
+        'Stop yaw calc'
+        global yaw_block
+        yaw_block = True
 
-    def do_start_data(self, arg):
+    def do_takeoff(self, arg):
+        'take-off'
+
+    def do_start_flow(self, arg):
         'Start data flow'
         start_data_flow()
 
-    def do_start_calculation(self, arg):
+    def do_start_calc(self, arg):
         'Start data calculation'
         start_data_calculation()
-
+ 
+    def do_start_log(self, arg):
+        'Start data logging'
+        start_data_logging()
 
     def do_bye(self,arg):
         'Exit'
@@ -115,7 +122,10 @@ def calculate_pid(_value,_setpoint,_mode):
 
     pid_prev = pid_value
 
-    return pid_value
+    if _mode == "pitch":
+        return -pid_value
+    else:
+        return pid_value
 
 def parse_incoming(data):
     udata = struct.unpack('!iiifffiii',data)
@@ -133,7 +143,7 @@ def parse_incoming(data):
     # print('elevator=', _elevator)    
     # print('aileron=', _aileron)    
     # print('rudder=', _rudder)    
-    return _pitch,_roll,_yaw
+    return _pitch,_roll,_yaw,_elevator,_aileron,_rudder,_speed,_altitude
 
 def pack_outgoing(_elevator,_aileron,_rudder):
     return struct.pack('!fffi',_elevator,_aileron,_rudder,305419896)
@@ -141,10 +151,16 @@ def pack_outgoing(_elevator,_aileron,_rudder):
 def calculate_output(data):
     global pitch_setpoint
     global roll_setpoint
-    pitch, roll, yaw = parse_incoming(data)
-    elevator = -calculate_pid(pitch,pitch_setpoint,"pitch") 
+    global yaw_setpoint
+    global yaw_block
+    pitch, roll, yaw = parse_incoming(data)[0:3]
+    elevator = calculate_pid(pitch,pitch_setpoint,"pitch") 
     aileron = calculate_pid(roll,roll_setpoint,"roll")
-    rudder = calculate_pid(yaw, yaw_setpoint,"yaw")
+    if yaw_block == True:
+        rudder = 0
+    elif yaw_block == False:
+        rudder = calculate_pid(yaw, yaw_setpoint,"yaw")
+        roll_setpoint = rudder * 10
     return pack_outgoing(elevator, aileron, rudder)
 
 def data_flow_handler(_sock_in,_sock_out):
@@ -152,7 +168,7 @@ def data_flow_handler(_sock_in,_sock_out):
     global data_send
     while True:
         time.sleep(0.1)
-        data_rcv, address = _sock_in.recvfrom(36)
+        data_rcv = _sock_in.recvfrom(36)[0]
         _sock_out.sendto(data_send,("", 9090))
 
 def data_calculation_handler():
@@ -162,9 +178,16 @@ def data_calculation_handler():
         time.sleep(0.1)
         data_send = calculate_output(data_rcv)
 
+def data_logging_handler(_file):
+    while(True):
+        global data_rcv
+        pitch,roll,yaw,elevator,aileron,rudder,speed,altitude = parse_incoming(data_rcv)
+        _file.write('{}\n Pitch = {}, Roll = {},Yaw = {}\n Elevator = {}, Aileron = {}, Rudder = {}\n Speed = {}, Altitude =  {}\n\n'.format
+                    (time.ctime(),pitch,roll,yaw,elevator,aileron,rudder,speed,altitude))
+        _file.flush
+        time.sleep(1)
+
 def start_data_flow():
-    # conn_in = wait_for_incoming_connection_from_fgfs()
-    # sock_out = connect_to_fgfs()
     sock_in = socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
     sock_out = socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
     sock_in.bind(('', 9091))
@@ -177,6 +200,12 @@ def start_data_calculation():
     data_calculation_thread = Thread(target = data_calculation_handler)
     data_calculation_thread.daemon = True
     data_calculation_thread.start()
+
+def start_data_logging():
+    f = open('output.log', 'a')
+    data_logging_thread = Thread(target = data_logging_handler,args = (f,))
+    data_logging_thread.daemon = True
+    data_logging_thread.start()
 
 if __name__ == "__main__":
     ConvertShell().cmdloop()
