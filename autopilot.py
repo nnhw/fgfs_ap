@@ -1,5 +1,6 @@
 import socket
 import time
+import datetime
 import struct
 import cmd
 from threading import Thread
@@ -14,8 +15,8 @@ pitch_setpoint = 0
 roll_setpoint = 0
 yaw_setpoint = 0
 
-data_rcv = 0
-data_send = 0
+data_rcv = b''
+data_send = b''
 
     #Класс-оболочка для командного интерфейса
 class ConvertShell(cmd.Cmd):
@@ -50,6 +51,15 @@ class ConvertShell(cmd.Cmd):
         'Start!'
         start_data_flow()
 
+    def do_start_data(self, arg):
+        'Start data flow'
+        start_data_flow()
+
+    def do_start_calculation(self, arg):
+        'Start data calculation'
+        start_data_calculation()
+
+
     def do_bye(self,arg):
         'Exit'
         print('Good Bye')
@@ -59,7 +69,6 @@ def parse(arg):
     'Convert a series of zero or more numbers to an argument tuple'
     # return tuple(map(int, arg.split()))
     return int(arg)
-
 
 def calculate_pid(_value,_setpoint,_mode):
     global error_prev
@@ -77,7 +86,7 @@ def calculate_pid(_value,_setpoint,_mode):
 
 
     proportional_coefficient = 0.0055 
-    integral_coefficient = 0.001
+    integral_coefficient = 0.0001
     differential_coefficient = 0.001
  
     pid_value = 0 
@@ -90,8 +99,8 @@ def calculate_pid(_value,_setpoint,_mode):
 
     P = proportional_coefficient * error
     I = I_prev + integral_coefficient * error
-    if I > 1:
-        I = 1
+    if I > 0.3:
+        I = 0.3
     D = differential_coefficient * (error - error_prev)
 
     pid_value = P+I+D
@@ -138,54 +147,31 @@ def calculate_output(data):
     rudder = calculate_pid(yaw, yaw_setpoint,"yaw")
     return pack_outgoing(elevator, aileron, rudder)
 
-def reconnect_to_fgfs(_socket):
-    print('reconnecting...')
-    try:
-        _socket.connect(('localhost', 9090))
-    except Exception:
-        time.sleep(1);
-        reconnect_to_fgfs(_socket);
-
-def connect_to_fgfs():
-    print('connecting...')
-    _sock_out = socket.socket()
-    try:
-        _sock_out.connect(('localhost', 9090))
-    except Exception:
-        time.sleep(1);
-        reconnect_to_fgfs(_sock_out);
-    print('outgoing connection established')
-    return _sock_out
-        
-def wait_for_incoming_connection_from_fgfs():
-    print('waiting for connecting...')
-    _sock_in = socket.socket()
-    _sock_in.bind(('', 9091))
-    _sock_in.listen(1)
-    _conn_in, _addr_in = _sock_in.accept()
-    print('incoming connection established:', _addr_in)
-    return _conn_in
-
-def data_flow_handler(_conn_in,_sock_out):
+def data_flow_handler(_sock_in,_sock_out):
     global data_rcv
     global data_send
     while True:
         time.sleep(0.1)
-        data_rcv = _conn_in.recv(36)
-        _sock_out.send(data_send)
-
-def start_data_flow():
-    conn_in = wait_for_incoming_connection_from_fgfs()
-    sock_out = connect_to_fgfs()
-    data_flow_thread = Thread(target = data_flow_handler,args = (conn_in,sock_out))
-    data_flow_thread.daemon = True
-    data_flow_thread.start()
+        data_rcv, address = _sock_in.recvfrom(36)
+        _sock_out.sendto(data_send,("", 9090))
 
 def data_calculation_handler():
     global data_rcv
     global data_send
     while True:
+        time.sleep(0.1)
         data_send = calculate_output(data_rcv)
+
+def start_data_flow():
+    # conn_in = wait_for_incoming_connection_from_fgfs()
+    # sock_out = connect_to_fgfs()
+    sock_in = socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
+    sock_out = socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
+    sock_in.bind(('', 9091))
+
+    data_flow_thread = Thread(target = data_flow_handler,args = (sock_in,sock_out))
+    data_flow_thread.daemon = True
+    data_flow_thread.start()
 
 def start_data_calculation():
     data_calculation_thread = Thread(target = data_calculation_handler)
