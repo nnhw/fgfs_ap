@@ -3,6 +3,7 @@ import time
 import struct
 import cmd
 from threading import Thread
+import queue
 
 error_prev = 0
 I_prev_p = 0
@@ -18,6 +19,9 @@ yaw_block = 0
 
 data_rcv = b''
 data_send = b''
+
+def initialization():
+    pass
 
     #Класс-оболочка для командного интерфейса
 class ConvertShell(cmd.Cmd):
@@ -208,6 +212,8 @@ def start_data_logging():
     data_logging_thread.start()
 
 if __name__ == "__main__":
+    initialization()
+    q = queue.Queue()
     ConvertShell().cmdloop()
 
 
