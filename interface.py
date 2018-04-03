@@ -3,8 +3,9 @@ from connection import connection
 
 connection_fgfs = connection()
 
+
 class ConvertShell(cmd.Cmd):
-    intro = 'Welcome to the Converter shell.   Type help or ? to list commands.\n'
+    intro = 'Welcome to the Converter shell. Type help or ? to list commands.\n'
     prompt = '(command) '
 
     def do_set_pitch(self, arg):
@@ -28,7 +29,7 @@ class ConvertShell(cmd.Cmd):
         global yaw_block
         yaw_block = False
         I_prev_y = 0
-        yaw_setpoint = parse(arg)        
+        yaw_setpoint = parse(arg)
 
     def do_stop_yaw_stab(self, arg):
         'Stop yaw calc'
@@ -45,15 +46,16 @@ class ConvertShell(cmd.Cmd):
     def do_start_calc(self, arg):
         'Start data calculation'
         start_data_calculation()
- 
+
     def do_start_log(self, arg):
         'Start data logging'
         start_data_logging()
 
-    def do_bye(self,arg):
+    def do_bye(self, arg):
         'Exit'
         print('Good Bye')
         return True
+
 
 def parse(arg):
     'Convert a series of zero or more numbers to an argument tuple'
