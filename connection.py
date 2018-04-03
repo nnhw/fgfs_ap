@@ -5,52 +5,62 @@ from threading import Thread
 
 
 class connection:
-    _data_send = 0
-    _data_rcv = 0
+    def __init__(self, l_port_in, l_port_out):
+        self._data_send = b''
+        self._data_rcv = b''
+        self._port_in = l_port_in
+        self._port_out = l_port_out
+
+        self._pitch = 0 
+        self._roll = 0
+        self._yaw = 0
+        self._elevator = 0
+        self._aileron = 0
+        self._rudder = 0
+        self._speed = 0
+        self._altitude = 0
 
     def start_data_flow(self):
         sock_in = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         sock_out = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        sock_in.bind(('', 9091))
+        sock_in.bind(('', self._port_in))
 
         data_flow_thread = Thread(
             target=self._data_flow_handler, args=(sock_in, sock_out))
         data_flow_thread.daemon = True
         data_flow_thread.start()
 
-    def start_data_logging(self):
-        f = open('output.log', 'a')
-        data_logging_thread = Thread(target=data_logging_handler, args=(f,))
-        data_logging_thread.daemon = True
-        data_logging_thread.start()
-
     def _data_flow_handler(self, _sock_in, _sock_out):
         while True:
             time.sleep(0.1)
+            _sock_out.sendto(self._data_send, ("", self._port_out))
             self._data_rcv = _sock_in.recvfrom(36)[0]
-            _sock_out.sendto(self._data_send, ("", 9090))
 
-    def parse_incoming(self, data):
-        udata = struct.unpack('!iiifffiii', data)
-        _pitch = udata[0]
-        _roll = udata[1]
-        _yaw = udata[2]
-        _elevator = udata[3]
-        _aileron = udata[4]
-        _rudder = udata[5]
-        _speed = udata[6]
-        _altitude = udata[7]
-        return _pitch, _roll, _yaw, _elevator, _aileron, _rudder, _speed, _altitude
+    def _parse_incoming(self):
+        udata = struct.unpack('!iiifffiii', self._data_rcv)
+        self._pitch = udata[0]
+        self._roll = udata[1]
+        self._yaw = udata[2]
+        self._elevator = udata[3]
+        self._aileron = udata[4]
+        self._rudder = udata[5]
+        self._speed = udata[6]
+        self._altitude = udata[7]
 
-    def pack_outgoing(self, _elevator, _aileron, _rudder):
+    def _pack_outgoing(self, _elevator, _aileron, _rudder):
         return struct.pack('!fffi', _elevator, _aileron, _rudder, 305419896)
 
-    def data_logging_handler(self,_file):
-        while(True):
-            global data_rcv
-            pitch, roll, yaw, elevator, aileron, rudder, speed, altitude = parse_incoming(
-                data_rcv)
-            _file.write('{}\n Pitch = {}, Roll = {},Yaw = {}\n Elevator = {}, Aileron = {}, Rudder = {}\n Speed = {}, Altitude =  {}\n\n'.format
-                        (time.ctime(), pitch, roll, yaw, elevator, aileron, rudder, speed, altitude))
-            _file.flush
-            time.sleep(1)
+    # def start_data_logging(self):
+    #     f = open('output.log', 'a')
+    #     data_logging_thread = Thread(target=self.data_logging_handler, args=(f,))
+    #     data_logging_thread.daemon = True
+    #     data_logging_thread.start()
+
+    # def data_logging_handler(self, _file):
+    #     while(True):
+    #         pitch, roll, yaw, elevator, aileron, rudder, speed, altitude = self.parse_incoming(
+    #             self._data_rcv)
+    #         _file.write('{}\n Pitch = {}, Roll = {},Yaw = {}\n Elevator = {}, Aileron = {}, Rudder = {}\n Speed = {}, Altitude =  {}\n\n'.format
+    #                     (time.ctime(), pitch, roll, yaw, elevator, aileron, rudder, speed, altitude))
+    #         _file.flush
+    #         time.sleep(1)

@@ -1,7 +1,9 @@
 import cmd
 from connection import connection
+from autopilot import autopilot
 
-connection_fgfs = connection()
+connection_fgfs = connection(9091, 9090)
+autopilot_fgfs = autopilot()
 
 
 class ConvertShell(cmd.Cmd):
@@ -10,31 +12,22 @@ class ConvertShell(cmd.Cmd):
 
     def do_set_pitch(self, arg):
         'Set pitch'
-        global pitch_setpoint
-        global I_prev_p
         I_prev_p = 0
         pitch_setpoint = parse(arg)
 
     def do_set_roll(self, arg):
         'Set roll'
-        global roll_setpoint
-        global I_prev_r
         I_prev_r = 0
         roll_setpoint = parse(arg)
 
     def do_set_yaw(self, arg):
         'Set yaw'
-        global yaw_setpoint
-        global I_prev_y
-        global yaw_block
         yaw_block = False
         I_prev_y = 0
         yaw_setpoint = parse(arg)
 
     def do_stop_yaw_stab(self, arg):
         'Stop yaw calc'
-        global yaw_block
-        yaw_block = True
 
     def do_takeoff(self, arg):
         'take-off'
@@ -45,11 +38,11 @@ class ConvertShell(cmd.Cmd):
 
     def do_start_calc(self, arg):
         'Start data calculation'
-        start_data_calculation()
+        autopilot_fgfs.start_periodic_update()
 
-    def do_start_log(self, arg):
-        'Start data logging'
-        start_data_logging()
+    # def do_start_log(self, arg):
+    #     'Start data logging'
+    #     start_data_logging()
 
     def do_bye(self, arg):
         'Exit'
