@@ -13,6 +13,12 @@ class state(Enum):
     ready = 2
 
 
+class type(Enum):
+    pitch = 0
+    roll = 1
+    yaw = 2
+
+
 class pid:
     def __init__(self, l_type, l_p_coeff, l_i_coeff, l_d_coeff):
         self._type = l_type
@@ -39,7 +45,7 @@ class pid:
         self._error_prev = t_error
         self._pid_prev = t_pid_value
 
-        if self._type == "pitch":
+        if self._type == type.pitch:
             return -t_pid_value
         else:
             return t_pid_value
@@ -62,9 +68,9 @@ class autopilot:
         self._aileron = 0
         self._rudder = 0
         
-        self._pid_aileron = pid('aileron', 0.0055, 0.0001, 0.0001)
-        self._pid_elevator = pid('elevator', 0.0055, 0.0001, 0.0001)
-        self._pid_rudder = pid('rudder', 0.0055, 0.0001, 0.0001)
+        self._pid_aileron = pid(type.roll, 0.0055, 0.0001, 0.0001)
+        self._pid_elevator = pid(type.pitch, 0.0055, 0.0001, 0.0001)
+        self._pid_rudder = pid(type.yaw, 0.0055, 0.0001, 0.0001)
 
     def _update_state(self):
         self._state = state.updating
@@ -75,10 +81,29 @@ class autopilot:
         elif self._yaw_block is False:
             self._rudder = self._pid_rudder.calculate(self._yaw_value, self._yaw_setpoint)
         self._state = state.ready
+    
+    def get_result(self):
+        return self._elevator, self._aileron, self._rudder
+
+    def set_setpoint(self, l_type, l_value):
+        if l_type == type.pitch:
+            self._pitch_setpoint = l_value
+        elif l_type == type.roll:
+            self._roll_setpoint = l_value
+        elif l_type == type.yaw:
+            self._yaw_setpoint = l_value
+
+    def set_values(self, l_type, l_value):
+        if l_type == type.pitch:
+            self._pitch_value = l_value
+        elif l_type == type.roll:
+            self._roll_value = l_value
+        elif l_type == type.yaw:
+            self._yaw_value = l_value
 
     def _periodic_update_handler(self):
         while True:
-            time.sleep(0.1)
+            time.sleep(0.1)  # TODO: Переделать на срабатыванию новых данных
             self._update_state()
 
     def start_periodic_update(self):
