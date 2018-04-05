@@ -1,7 +1,6 @@
 import socket
 import struct
 import time
-from threading import Thread
 
 
 class connection:
@@ -10,8 +9,6 @@ class connection:
         self._data_rcv = b''
         self._port_in = l_port_in
         self._port_out = l_port_out
-
-        self._update_rate_hz = 10
 
         self._pitch = 0 
         self._roll = 0
@@ -22,21 +19,9 @@ class connection:
         self._speed = 0
         self._altitude = 0
 
-    def start_data_flow(self):
-        sock_in = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        sock_out = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        sock_in.bind(('', self._port_in))
-
-        data_flow_thread = Thread(
-            target=self._data_flow_handler, args=(sock_in, sock_out))
-        data_flow_thread.daemon = True
-        data_flow_thread.start()
-
-    def _data_flow_handler(self, _sock_in, _sock_out):
-        while True:
-            time.sleep(1/self._update_rate_hz)
-            _sock_out.sendto(self._data_send, ("", self._port_out))
-            self._data_rcv = _sock_in.recvfrom(36)[0]
+        self.sock_in = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self.sock_out = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self.sock_in.bind(('', self._port_in))
 
     def _parse_incoming(self):
         udata = struct.unpack('!iiifffiii', self._data_rcv)
@@ -51,6 +36,15 @@ class connection:
 
     def _pack_outgoing(self, _elevator, _aileron, _rudder):
         return struct.pack('!fffi', _elevator, _aileron, _rudder, 305419896)
+
+    def send_data(self, l_data):
+        self._data_send = self._pack_outgoing(l_data)
+        _sock_out.sendto(self._data_send, ("", self._port_out))
+
+    def receive_data(self):
+        self._data_rcv = _sock_in.recvfrom(36)[0]
+        self._parse_incoming
+        return self._data_rcv
 
     # def start_data_logging(self):
     #     f = open('output.log', 'a')

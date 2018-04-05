@@ -1,9 +1,7 @@
 import socket
-import time
 import struct
 import cmd
-from threading import Thread
-import queue
+# import queue
 from enum import Enum
 
 
@@ -54,7 +52,6 @@ class pid:
 class autopilot:
     def __init__(self):
         self._state = state.initialization
-        self._update_rate_hz = 10
 
         self._pitch_setpoint = 0
         self._roll_setpoint = 0
@@ -108,13 +105,3 @@ class autopilot:
             return True
         else:
             return False
-
-    def _periodic_update_handler(self):
-        while True:  # TODO: Переделать на срабатыванию новых данных
-            time.sleep(1/self._update_rate_hz)
-            self._update_state()
-
-    def start_periodic_update(self):
-        data_calculation_thread = Thread(target=self._periodic_update_handler)
-        data_calculation_thread.daemon = True
-        data_calculation_thread.start()

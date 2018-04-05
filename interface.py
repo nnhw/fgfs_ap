@@ -1,9 +1,45 @@
 import cmd
 from connection import connection
 from autopilot import autopilot
+from threading import Thread
+import time
 
 connection_fgfs = connection(9091, 9090)
 autopilot_fgfs = autopilot()
+
+update_rate_hz = 10
+
+
+def start_data_flow(self):
+    data_flow_thread = Thread(target=data_flow_handler)
+    data_flow_thread.daemon = True
+    data_flow_thread.start()
+
+
+def data_flow_handler(self):
+    global update_rate_hz
+    while True:
+        time.sleep(1/update_rate_hz)
+        data = connection_fgfs.receive_data()
+        
+        autopilot_fgfs.set_value()
+        autopilot_fgfs.set_setpoint()
+
+
+
+        connection_fgfs.send_data()
+
+
+# def _periodic_update_handler(self):
+#     while True:  # TODO: Переделать на срабатыванию новых данных
+#         time.sleep(1/self._update_rate_hz)
+#         self._update_state()
+
+
+def start_periodic_update(self):
+    data_calculation_thread = Thread(target=self._periodic_update_handler)
+    data_calculation_thread.daemon = True
+    data_calculation_thread.start()
 
 
 class ConvertShell(cmd.Cmd):
@@ -34,11 +70,11 @@ class ConvertShell(cmd.Cmd):
 
     def do_start_flow(self, arg):
         'Start data flow'
-        connection_fgfs.start_data_flow()
+        connection_fgfs.start_data_flow(autopilot_fgfs)
 
-    def do_start_calc(self, arg):
-        'Start data calculation'
-        autopilot_fgfs.start_periodic_update()
+    # def do_start_calc(self, arg):
+    #     'Start data calculation'
+    #     autopilot_fgfs.start_periodic_update()
 
     # def do_start_log(self, arg):
     #     'Start data logging'
