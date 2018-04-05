@@ -11,6 +11,8 @@ class connection:
         self._port_in = l_port_in
         self._port_out = l_port_out
 
+        self._update_rate_hz = 10
+
         self._pitch = 0 
         self._roll = 0
         self._yaw = 0
@@ -32,7 +34,7 @@ class connection:
 
     def _data_flow_handler(self, _sock_in, _sock_out):
         while True:
-            time.sleep(0.1)
+            time.sleep(1/self._update_rate_hz)
             _sock_out.sendto(self._data_send, ("", self._port_out))
             self._data_rcv = _sock_in.recvfrom(36)[0]
 

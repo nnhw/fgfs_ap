@@ -54,6 +54,8 @@ class pid:
 class autopilot:
     def __init__(self):
         self._state = state.initialization
+        self._update_rate_hz = 10
+
         self._pitch_setpoint = 0
         self._roll_setpoint = 0
         self._yaw_setpoint = 0
@@ -93,7 +95,7 @@ class autopilot:
         elif l_type == type.yaw:
             self._yaw_setpoint = l_value
 
-    def set_values(self, l_type, l_value):
+    def set_value(self, l_type, l_value):
         if l_type == type.pitch:
             self._pitch_value = l_value
         elif l_type == type.roll:
@@ -101,9 +103,15 @@ class autopilot:
         elif l_type == type.yaw:
             self._yaw_value = l_value
 
+    def isReady(self):
+        if self._state == state.ready:
+            return True
+        else:
+            return False
+
     def _periodic_update_handler(self):
-        while True:
-            time.sleep(0.1)  # TODO: Переделать на срабатыванию новых данных
+        while True:  # TODO: Переделать на срабатыванию новых данных
+            time.sleep(1/self._update_rate_hz)
             self._update_state()
 
     def start_periodic_update(self):
