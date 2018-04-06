@@ -71,7 +71,7 @@ class autopilot:
         self._pid_elevator = pid(type.pitch, 0.0055, 0.0001, 0.0001)
         self._pid_rudder = pid(type.yaw, 0.0055, 0.0001, 0.0001)
 
-    def _update_state(self):
+    def update_state(self):
         self._state = state.updating
         self._elevator = self._pid_elevator.calculate(
             self._pitch_value, self._pitch_setpoint)

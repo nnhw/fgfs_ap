@@ -22,17 +22,20 @@ def data_flow_handler():
         time.sleep(1/update_rate_hz)
         t_pitch, t_roll, t_yaw, t_speed, t_altitude = connection_fgfs.receive_data()
 
+        # print(t_pitch, t_roll, t_yaw)
+
         autopilot_fgfs.set_value(type.pitch, t_pitch)
         autopilot_fgfs.set_value(type.roll, t_roll)
         autopilot_fgfs.set_value(type.yaw, t_yaw)
-        autopilot_fgfs.set_setpoint(type.pitch, 0)
-        autopilot_fgfs.set_setpoint(type.roll, 0)
-        autopilot_fgfs.set_setpoint(type.yaw, 0)
+
+        autopilot_fgfs.update_state()
 
         while autopilot_fgfs.isReady() is not True:
             pass
 
         t_elevator, t_aileron, t_rudder = autopilot_fgfs.get_result()
+
+        # print(t_elevator, t_aileron, t_rudder)
 
         connection_fgfs.send_data(t_elevator, t_aileron, t_rudder)
 
@@ -55,19 +58,21 @@ class ConvertShell(cmd.Cmd):
 
     def do_set_pitch(self, arg):
         'Set pitch'
-        I_prev_p = 0
         pitch_setpoint = parse(arg)
+        autopilot_fgfs.set_setpoint(type.pitch, pitch_setpoint)
 
     def do_set_roll(self, arg):
         'Set roll'
         I_prev_r = 0
         roll_setpoint = parse(arg)
+        autopilot_fgfs.set_setpoint(type.roll, roll_setpoint)
 
     def do_set_yaw(self, arg):
         'Set yaw'
         yaw_block = False
         I_prev_y = 0
         yaw_setpoint = parse(arg)
+        autopilot_fgfs.set_setpoint(type.yaw, yaw_setpoint)
 
     def do_stop_yaw_stab(self, arg):
         'Stop yaw calc'
