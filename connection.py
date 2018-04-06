@@ -10,41 +10,48 @@ class connection:
         self._port_in = l_port_in
         self._port_out = l_port_out
 
-        self._pitch = 0 
+        self._pitch = 0
         self._roll = 0
         self._yaw = 0
-        self._elevator = 0
-        self._aileron = 0
-        self._rudder = 0
+        self._elevator_in = 0
+        self._aileron_in = 0
+        self._rudder_in = 0
         self._speed = 0
         self._altitude = 0
 
-        self.sock_in = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        self.sock_out = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        self.sock_in.bind(('', self._port_in))
+        self._elevator_out = 0
+        self._aileron_out = 0
+        self._rudder_out = 0
 
-    def _parse_incoming(self):
-        udata = struct.unpack('!iiifffiii', self._data_rcv)
+        self._sock_in = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self._sock_out = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self._sock_in.bind(('', self._port_in))
+
+    def _parse_incoming(self, l_data_rcv):
+        udata = struct.unpack('!iiifffiii', l_data_rcv)
         self._pitch = udata[0]
         self._roll = udata[1]
         self._yaw = udata[2]
-        self._elevator = udata[3]
-        self._aileron = udata[4]
-        self._rudder = udata[5]
+        self._elevator_in = udata[3]
+        self._aileron_in = udata[4]
+        self._rudder_in = udata[5]
         self._speed = udata[6]
         self._altitude = udata[7]
 
-    def _pack_outgoing(self, _elevator, _aileron, _rudder):
-        return struct.pack('!fffi', _elevator, _aileron, _rudder, 305419896)
+    def _pack_outgoing(self):
+        return struct.pack('!fffi', self._elevator_out, self._aileron_out, self._rudder_out, 305419896)
 
-    def send_data(self, l_data):
-        self._data_send = self._pack_outgoing(l_data)
-        _sock_out.sendto(self._data_send, ("", self._port_out))
+    def send_data(self, l_elevator, l_aileron, l_rudder):
+        self._elevator_out = l_elevator
+        self._aileron_out = l_aileron
+        self._rudder_out = l_rudder
+        self._data_send = self._pack_outgoing()
+        self._sock_out.sendto(self._data_send, ("", self._port_out))
 
     def receive_data(self):
-        self._data_rcv = _sock_in.recvfrom(36)[0]
-        self._parse_incoming
-        return self._data_rcv
+        self._data_rcv = self._sock_in.recvfrom(36)[0]
+        self._parse_incoming(self._data_rcv)
+        return self._pitch, self._roll, self._yaw, self._speed, self._altitude
 
     # def start_data_logging(self):
     #     f = open('output.log', 'a')

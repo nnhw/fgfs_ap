@@ -1,6 +1,6 @@
 import cmd
 from connection import connection
-from autopilot import autopilot
+from autopilot import autopilot, state, type
 from threading import Thread
 import time
 
@@ -10,24 +10,31 @@ autopilot_fgfs = autopilot()
 update_rate_hz = 10
 
 
-def start_data_flow(self):
+def start_data_flow():
     data_flow_thread = Thread(target=data_flow_handler)
     data_flow_thread.daemon = True
     data_flow_thread.start()
 
 
-def data_flow_handler(self):
+def data_flow_handler():
     global update_rate_hz
     while True:
         time.sleep(1/update_rate_hz)
-        data = connection_fgfs.receive_data()
-        
-        autopilot_fgfs.set_value()
-        autopilot_fgfs.set_setpoint()
+        t_pitch, t_roll, t_yaw, t_speed, t_altitude = connection_fgfs.receive_data()
 
+        autopilot_fgfs.set_value(type.pitch, t_pitch)
+        autopilot_fgfs.set_value(type.roll, t_roll)
+        autopilot_fgfs.set_value(type.yaw, t_yaw)
+        autopilot_fgfs.set_setpoint(type.pitch, 0)
+        autopilot_fgfs.set_setpoint(type.roll, 0)
+        autopilot_fgfs.set_setpoint(type.yaw, 0)
 
+        while autopilot_fgfs.isReady() is not True:
+            pass
 
-        connection_fgfs.send_data()
+        t_elevator, t_aileron, t_rudder = autopilot_fgfs.get_result()
+
+        connection_fgfs.send_data(t_elevator, t_aileron, t_rudder)
 
 
 # def _periodic_update_handler(self):
@@ -70,7 +77,7 @@ class ConvertShell(cmd.Cmd):
 
     def do_start_flow(self, arg):
         'Start data flow'
-        connection_fgfs.start_data_flow(autopilot_fgfs)
+        start_data_flow()
 
     # def do_start_calc(self, arg):
     #     'Start data calculation'

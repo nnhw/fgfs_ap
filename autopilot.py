@@ -56,31 +56,34 @@ class autopilot:
         self._pitch_setpoint = 0
         self._roll_setpoint = 0
         self._yaw_setpoint = 0
-        
+
         self._pitch_value = 0
         self._roll_value = 0
         self._yaw_value = 0
-        
+
         self._yaw_block = False
-        
+
         self._elevator = 0
         self._aileron = 0
         self._rudder = 0
-        
+
         self._pid_aileron = pid(type.roll, 0.0055, 0.0001, 0.0001)
         self._pid_elevator = pid(type.pitch, 0.0055, 0.0001, 0.0001)
         self._pid_rudder = pid(type.yaw, 0.0055, 0.0001, 0.0001)
 
     def _update_state(self):
         self._state = state.updating
-        self._elevator = self._pid_elevator.calculate(self._pitch_value, self._pitch_setpoint)
-        self._aileron = self._pid_aileron.calculate(self._roll_value, self._roll_setpoint)
+        self._elevator = self._pid_elevator.calculate(
+            self._pitch_value, self._pitch_setpoint)
+        self._aileron = self._pid_aileron.calculate(
+            self._roll_value, self._roll_setpoint)
         if self._yaw_block is True:
             self._rudder = 0
         elif self._yaw_block is False:
-            self._rudder = self._pid_rudder.calculate(self._yaw_value, self._yaw_setpoint)
+            self._rudder = self._pid_rudder.calculate(
+                self._yaw_value, self._yaw_setpoint)
         self._state = state.ready
-    
+
     def get_result(self):
         return self._elevator, self._aileron, self._rudder
 
