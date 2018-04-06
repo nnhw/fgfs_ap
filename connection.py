@@ -4,11 +4,35 @@ import time
 
 
 class connection:
+    def __init__(self, l_type_c="both", l_port_in_c=0, l_port_out_c=0):
+        self._type = l_type_c
+        if self._type == "in" or self._type == "both":
+            self._data_rcv = b''
+            self._port_in = l_port_in_c
+            self._sock_in = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            self._sock_in.bind(('', self._port_in))
+
+        if self._type == "out" or self._type == "both":
+            self._data_send = b''
+            self._port_out = l_port_out_c
+            self._sock_out = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+
+    def send_data(self, l_data):
+        if self._type == "out" or self._type == "both":
+            self._data_send = l_data
+            self._sock_out.sendto(self._data_send, ("", self._port_out))
+
+    def receive_data(self):
+        if self._type == "in" or self._type == "both":
+            self._data_rcv = self._sock_in.recvfrom(36)[0]
+            return self._data_rcv
+        else:
+            return 0
+
+
+class connection_autopilot(connection):
     def __init__(self, l_port_in, l_port_out):
-        self._data_send = b''
-        self._data_rcv = b''
-        self._port_in = l_port_in
-        self._port_out = l_port_out
+        connection.__init__(self, l_type_c="both", l_port_in_c=l_port_in, l_port_out_c=l_port_out)
 
         self._pitch = 0
         self._roll = 0
@@ -22,10 +46,6 @@ class connection:
         self._elevator_out = 0
         self._aileron_out = 0
         self._rudder_out = 0
-
-        self._sock_in = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        self._sock_out = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        self._sock_in.bind(('', self._port_in))
 
     def _parse_incoming(self, l_data_rcv):
         udata = struct.unpack('!iiifffiii', l_data_rcv)

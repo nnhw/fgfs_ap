@@ -31,6 +31,9 @@ class pid:
         self._P = 0
         self._I = 0
         self._D = 0
+    
+    def get_data(self):
+        return self._P, self._I, self._D
 
     def calculate(self, l_value, l_setpoint):
         t_error = l_setpoint - l_value
@@ -67,9 +70,9 @@ class autopilot:
         self._aileron = 0
         self._rudder = 0
 
-        self._pid_aileron = pid(type.roll, 0.0055, 0.0001, 0.0001)
-        self._pid_elevator = pid(type.pitch, 0.0055, 0.0001, 0.0001)
-        self._pid_rudder = pid(type.yaw, 0.0055, 0.0001, 0.0001)
+        self._pid_aileron = pid(type.roll, 0.0055, 0.001, 0.001)
+        self._pid_elevator = pid(type.pitch, 0.0055, 0.001, 0.001)
+        self._pid_rudder = pid(type.yaw, 0.0055, 0.001, 0.001)
 
     def update_state(self):
         self._state = state.updating
@@ -87,6 +90,9 @@ class autopilot:
     def get_result(self):
         return self._elevator, self._aileron, self._rudder
 
+    def get_pid_data(self, l_type):
+        return self._pid_aileron.get_data()
+
     def set_setpoint(self, l_type, l_value):
         if l_type == type.pitch:
             self._pitch_setpoint = l_value
@@ -94,6 +100,7 @@ class autopilot:
             self._roll_setpoint = l_value
         elif l_type == type.yaw:
             self._yaw_setpoint = l_value
+            self._yaw_block = False
 
     def set_value(self, l_type, l_value):
         if l_type == type.pitch:
@@ -102,6 +109,14 @@ class autopilot:
             self._roll_value = l_value
         elif l_type == type.yaw:
             self._yaw_value = l_value
+
+    def set_block(self, l_type):
+        if l_type == type.pitch:
+            pass
+        elif l_type == type.roll:
+            pass
+        elif l_type == type.yaw:
+            self._yaw_block = True    
 
     def isReady(self):
         if self._state == state.ready:

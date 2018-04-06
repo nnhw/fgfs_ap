@@ -1,13 +1,8 @@
 import cmd
-from connection import connection
+from connection import connection_autopilot
 from autopilot import autopilot, state, type
 from threading import Thread
 import time
-
-connection_fgfs = connection(9091, 9090)
-autopilot_fgfs = autopilot()
-
-update_rate_hz = 10
 
 
 def start_data_flow():
@@ -40,12 +35,6 @@ def data_flow_handler():
         connection_fgfs.send_data(t_elevator, t_aileron, t_rudder)
 
 
-# def _periodic_update_handler(self):
-#     while True:  # TODO: Переделать на срабатыванию новых данных
-#         time.sleep(1/self._update_rate_hz)
-#         self._update_state()
-
-
 def start_periodic_update(self):
     data_calculation_thread = Thread(target=self._periodic_update_handler)
     data_calculation_thread.daemon = True
@@ -69,13 +58,12 @@ class ConvertShell(cmd.Cmd):
 
     def do_set_yaw(self, arg):
         'Set yaw'
-        yaw_block = False
-        I_prev_y = 0
         yaw_setpoint = parse(arg)
         autopilot_fgfs.set_setpoint(type.yaw, yaw_setpoint)
 
     def do_stop_yaw_stab(self, arg):
         'Stop yaw calc'
+        autopilot_fgfs.set_block(type.yaw)
 
     def do_takeoff(self, arg):
         'take-off'
@@ -83,10 +71,6 @@ class ConvertShell(cmd.Cmd):
     def do_start_flow(self, arg):
         'Start data flow'
         start_data_flow()
-
-    # def do_start_calc(self, arg):
-    #     'Start data calculation'
-    #     autopilot_fgfs.start_periodic_update()
 
     # def do_start_log(self, arg):
     #     'Start data logging'
@@ -105,4 +89,7 @@ def parse(arg):
 
 
 if __name__ == "__main__":
+    connection_fgfs = connection_autopilot(9091, 9090)
+    autopilot_fgfs = autopilot()
+    update_rate_hz = 10
     ConvertShell().cmdloop()
