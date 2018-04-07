@@ -30,9 +30,27 @@ class connection:
             return 0
 
 
+class connection_debug(connection):
+    def __init__(self, l_type, l_port_in, l_port_out):
+        connection.__init__(self, l_type_c=l_type,
+                            l_port_in_c=l_port_in, l_port_out_c=l_port_out)
+
+    def _parse_incoming(self, l_data_rcv):
+        udata = struct.unpack('!iiifffiii', l_data_rcv)
+        return udata
+
+    def _pack_outgoing(self, l_data):
+        return struct.pack('!fffi', l_data[0], l_data[1], l_data[1], 305419896)
+
+    def send_data(self, l_data):
+        t_data_send = self._pack_outgoing(l_data)
+        connection.send_data(self, t_data_send)
+
+
 class connection_autopilot(connection):
     def __init__(self, l_port_in, l_port_out):
-        connection.__init__(self, l_type_c="both", l_port_in_c=l_port_in, l_port_out_c=l_port_out)
+        connection.__init__(self, l_type_c="both",
+                            l_port_in_c=l_port_in, l_port_out_c=l_port_out)
 
         self._pitch = 0
         self._roll = 0
