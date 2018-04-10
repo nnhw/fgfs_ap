@@ -1,8 +1,8 @@
-from connection import connection
+from connection import connection_debug
 import time
 
-connection_interface = connection(l_type_c="in", l_port_in_c=9002)
+connection_interface = connection_debug(l_type="in", l_port_in=9002)
 
 while True:
-    time.sleep(1)
+    time.sleep(0.1)
     print(connection_interface.receive_data())

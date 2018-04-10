@@ -1,5 +1,5 @@
 import cmd
-from connection import connection_autopilot, connection
+from connection import connection_autopilot, connection_debug
 from autopilot import autopilot, state, type
 from threading import Thread
 import time
@@ -30,7 +30,9 @@ def data_flow_handler():
 
         t_elevator, t_aileron, t_rudder = autopilot_fgfs.get_result()
 
-        connection_debug.send_data(bytes(t_elevator, t_aileron, t_rudder))
+        debug_info = (t_elevator, t_aileron, t_rudder)
+
+        connection_deb.send_data(debug_info)
         connection_fgfs.send_data(t_elevator, t_aileron, t_rudder)
 
 
@@ -89,7 +91,7 @@ def parse(arg):
 
 if __name__ == "__main__":
     connection_fgfs = connection_autopilot(9091, 9090)
-    connection_debug = connection(l_type_c="out", l_port_out_c=9002)
+    connection_deb = connection_debug(l_type="out", l_port_out=9002)
     autopilot_fgfs = autopilot()
     update_rate_hz = 10
     ConvertShell().cmdloop()

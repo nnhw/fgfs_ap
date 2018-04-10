@@ -22,29 +22,30 @@ class connection:
             self._data_send = l_data
             self._sock_out.sendto(self._data_send, ("", self._port_out))
 
-    def receive_data(self):
+    def receive_data(self, l_size):
         if self._type == "in" or self._type == "both":
-            self._data_rcv = self._sock_in.recvfrom(36)[0]
+            self._data_rcv = self._sock_in.recvfrom(l_size)[0]
             return self._data_rcv
         else:
             return 0
 
 
 class connection_debug(connection):
-    def __init__(self, l_type, l_port_in, l_port_out):
+    def __init__(self, l_type="both", l_port_in=0, l_port_out=0):
         connection.__init__(self, l_type_c=l_type,
                             l_port_in_c=l_port_in, l_port_out_c=l_port_out)
 
     def _parse_incoming(self, l_data_rcv):
-        udata = struct.unpack('!iiifffiii', l_data_rcv)
-        return udata
+        return struct.unpack('!fff', l_data_rcv)
 
     def _pack_outgoing(self, l_data):
-        return struct.pack('!fffi', l_data[0], l_data[1], l_data[1], 305419896)
+        return struct.pack('!fff', l_data[0], l_data[1], l_data[2])
 
     def send_data(self, l_data):
-        t_data_send = self._pack_outgoing(l_data)
-        connection.send_data(self, t_data_send)
+        connection.send_data(self, self._pack_outgoing(l_data))
+
+    def receive_data(self):
+        return self._parse_incoming(connection.receive_data(self, 12))
 
 
 class connection_autopilot(connection):
@@ -84,10 +85,10 @@ class connection_autopilot(connection):
         self._aileron_out = l_aileron
         self._rudder_out = l_rudder
         self._data_send = self._pack_outgoing()
-        self._sock_out.sendto(self._data_send, ("", self._port_out))
+        connection.send_data(self, self._data_send)
 
     def receive_data(self):
-        self._data_rcv = self._sock_in.recvfrom(36)[0]
+        self._data_rcv = connection.receive_data(self, 36)
         self._parse_incoming(self._data_rcv)
         return self._pitch, self._roll, self._yaw, self._speed, self._altitude
 
