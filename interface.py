@@ -30,9 +30,13 @@ def data_flow_handler():
 
         t_elevator, t_aileron, t_rudder = autopilot_fgfs.get_result()
 
-        debug_info = (t_elevator, t_aileron, t_rudder)
+        # t_P_elevator, t_I_elevator, t_D_elevator = autopilot_fgfs.get_pid_data(type.pitch)
 
-        connection_deb.send_data(debug_info)
+        t_autopilot_info = (t_elevator, t_aileron, t_rudder)
+
+        t_debug_info = t_autopilot_info + autopilot_fgfs.get_pid_data(type.pitch) + autopilot_fgfs.get_pid_data(type.roll) + autopilot_fgfs.get_pid_data(type.yaw) 
+
+        connection_deb.send_data(t_debug_info)
         connection_fgfs.send_data(t_elevator, t_aileron, t_rudder)
 
 

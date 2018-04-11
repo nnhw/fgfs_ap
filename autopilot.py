@@ -31,7 +31,7 @@ class pid:
         self._P = 0
         self._I = 0
         self._D = 0
-    
+
     def get_data(self):
         return self._P, self._I, self._D
 
@@ -39,12 +39,14 @@ class pid:
         t_error = l_setpoint - l_value
         self._P = self._proportional_coefficient * t_error
         self._I = self._I_prev + self._integral_coefficient * t_error
-        # if I > 0.3:
-        #     I = 0.3
         self._D = self._differential_coefficient * (t_error - self._error_prev)
+        if self._I > 1:
+            self._I = 1
+        if self._I < -1:
+            self._I = -1
         t_pid_value = self._P + self._I + self._D
         self._error_prev = t_error
-        self._pid_prev = t_pid_value
+        self._I_prev = t_pid_value
 
         if self._type == type.pitch:
             return -t_pid_value
@@ -91,7 +93,12 @@ class autopilot:
         return self._elevator, self._aileron, self._rudder
 
     def get_pid_data(self, l_type):
-        return self._pid_aileron.get_data()
+        if l_type == type.pitch:
+            return self._pid_elevator.get_data()
+        elif l_type == type.roll:
+            return self._pid_aileron.get_data()
+        elif l_type == type.yaw:
+            return self._pid_rudder.get_data()
 
     def set_setpoint(self, l_type, l_value):
         if l_type == type.pitch:
@@ -116,7 +123,7 @@ class autopilot:
         elif l_type == type.roll:
             pass
         elif l_type == type.yaw:
-            self._yaw_block = True    
+            self._yaw_block = True
 
     def isReady(self):
         if self._state == state.ready:

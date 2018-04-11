@@ -36,16 +36,19 @@ class connection_debug(connection):
                             l_port_in_c=l_port_in, l_port_out_c=l_port_out)
 
     def _parse_incoming(self, l_data_rcv):
-        return struct.unpack('!fff', l_data_rcv)
+        return struct.unpack('!ffffffffffff', l_data_rcv)
 
     def _pack_outgoing(self, l_data):
-        return struct.pack('!fff', l_data[0], l_data[1], l_data[2])
+        return struct.pack('!ffffffffffff', l_data[0], l_data[1], l_data[2],
+                           l_data[3], l_data[4], l_data[5],
+                           l_data[6], l_data[7], l_data[8],
+                           l_data[9], l_data[10], l_data[11])
 
     def send_data(self, l_data):
         connection.send_data(self, self._pack_outgoing(l_data))
 
     def receive_data(self):
-        return self._parse_incoming(connection.receive_data(self, 12))
+        return self._parse_incoming(connection.receive_data(self, 48))
 
 
 class connection_autopilot(connection):
