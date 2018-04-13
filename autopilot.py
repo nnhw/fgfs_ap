@@ -40,13 +40,22 @@ class pid:
         self._P = self._proportional_coefficient * t_error
         self._I = self._I_prev + self._integral_coefficient * t_error
         self._D = self._differential_coefficient * (t_error - self._error_prev)
-        if self._I > 1:
-            self._I = 1
-        if self._I < -1:
-            self._I = -1
+        if self._P > 0.3:
+            self._P = 0.3
+        if self._P < -0.3:
+            self._P = -0.3
+        if self._I > 0.1:
+            self._I = 0.1
+        if self._I < -0.1:
+            self._I = -0.1
+        if self._D > 0.3:
+            self._D = 0.3
+        if self._D < -0.3:
+            self._D = -0.3
+
         t_pid_value = self._P + self._I + self._D
         self._error_prev = t_error
-        self._I_prev = t_pid_value
+        self._I_prev = self._I
 
         if self._type == type.pitch:
             return -t_pid_value
@@ -72,9 +81,9 @@ class autopilot:
         self._aileron = 0
         self._rudder = 0
 
-        self._pid_aileron = pid(type.roll, 0.0055, 0.001, 0.001)
-        self._pid_elevator = pid(type.pitch, 0.0055, 0.001, 0.001)
-        self._pid_rudder = pid(type.yaw, 0.0055, 0.001, 0.001)
+        self._pid_aileron = pid(type.roll, 0.005, 0.0001, 0.0001)
+        self._pid_elevator = pid(type.pitch, 0.005, 0.0001, 0.0001)
+        self._pid_rudder = pid(type.yaw, 0.005, 0.0001, 0.0001)
 
     def update_state(self):
         self._state = state.updating
