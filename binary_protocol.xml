@@ -34,19 +34,19 @@
 
    <chunk>
     <name>Pitch (deg)</name>
-    <type>int</type>
+    <type>float</type>
     <node>/orientation/pitch-deg</node>
    </chunk>
 
    <chunk>
     <name>Roll (deg)</name>
-    <type>int</type>
+    <type>float</type>
     <node>/orientation/roll-deg</node>
    </chunk>   
    
    <chunk>
     <name>Yaw (deg)</name>
-    <type>int</type>
+    <type>float</type>
     <node>/orientation/heading-deg</node>
    </chunk>
 
@@ -70,13 +70,13 @@
 
    <chunk>
     <name>indicated speed (kt)</name>
-    <type>int</type>
+    <type>float</type>
     <node>/velocities/airspeed-kt</node>
    </chunk>
 
    <chunk>
     <name>altitude (ft)</name>
-    <type>int</type>
+    <type>float</type>
     <node>/position/altitude-ft</node>
    </chunk>   
    

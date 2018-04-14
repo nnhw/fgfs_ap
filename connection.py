@@ -70,7 +70,7 @@ class connection_autopilot(connection):
         self._rudder_out = 0
 
     def _parse_incoming(self, l_data_rcv):
-        udata = struct.unpack('!iiifffiii', l_data_rcv)
+        udata = struct.unpack('!fffffffff', l_data_rcv)
         self._pitch = udata[0]
         self._roll = udata[1]
         self._yaw = udata[2]

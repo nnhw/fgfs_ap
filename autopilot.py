@@ -44,10 +44,10 @@ class pid:
             self._P = 0.3
         if self._P < -0.3:
             self._P = -0.3
-        if self._I > 0.1:
-            self._I = 0.1
-        if self._I < -0.1:
-            self._I = -0.1
+        if self._I > 0.3:
+            self._I = 0.3
+        if self._I < -0.3:
+            self._I = -0.3
         if self._D > 0.3:
             self._D = 0.3
         if self._D < -0.3:
